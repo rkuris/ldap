@@ -5,6 +5,10 @@
 // File contains Entry structures and functions
 package ldap
 
+import (
+	"strings"
+)
+
 type Entry struct {
 	DN         string
 	Attributes []*EntryAttribute
@@ -50,8 +54,9 @@ func (e *Entry) AddAttributeValues(attributeName string, values []string) {
 }
 
 func (e *Entry) GetAttributeValues(attributeName string) []string {
+	attributeName = strings.ToLower(attributeName)
 	for _, attr := range e.Attributes {
-		if attr.Name == attributeName {
+		if strings.ToLower(attr.Name) == attributeName {
 			return attr.Values
 		}
 	}
@@ -61,17 +66,18 @@ func (e *Entry) GetAttributeValues(attributeName string) []string {
 // GetAttributeValue - returning an empty string is a bad idea
 // some directory servers will return empty attr values (Sunone).
 // Just asking for trouble.
-//func (e *Entry) GetAttributeValue(attributeName string) string {
-//	values := e.GetAttributeValues(attributeName)
-//	if len(values) == 0 {
-//		return ""
-//	}
-//	return values[0]
-//}
+func (e *Entry) GetAttributeValue(attributeName string) string {
+	values := e.GetAttributeValues(attributeName)
+	if len(values) == 0 {
+		return ""
+	}
+	return values[0]
+}
 
 func (e *Entry) GetAttributeIndex(Attribute string) int {
+	Attribute = strings.ToLower(Attribute)
 	for i, attr := range e.Attributes {
-		if attr.Name == Attribute {
+		if strings.ToLower(attr.Name) == Attribute {
 			return i
 		}
 	}
