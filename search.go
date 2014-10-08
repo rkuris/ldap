@@ -232,12 +232,12 @@ func decodeSearchResponse(packet *ber.Packet) (discreteSearchResult *DiscreteSea
 	case SearchResultEntry:
 		discreteSearchResult.SearchResultType = SearchResultEntry
 		entry := new(Entry)
-		entry.DN = packet.Children[1].Children[0].Value.(string)
+		entry.DN = packet.Children[1].Children[0].ValueString()
 		for _, child := range packet.Children[1].Children[1].Children {
 			attr := new(EntryAttribute)
-			attr.Name = child.Children[0].Value.(string)
+			attr.Name = child.Children[0].ValueString()
 			for _, value := range child.Children[1].Children {
-				attr.Values = append(attr.Values, value.Value.(string))
+				attr.Values = append(attr.Values, value.ValueString())
 			}
 			entry.Attributes = append(entry.Attributes, attr)
 		}
@@ -253,14 +253,14 @@ func decodeSearchResponse(packet *ber.Packet) (discreteSearchResult *DiscreteSea
 		if len(packet.Children) == 3 {
 			controls := make([]Control, 0)
 			for _, child := range packet.Children[2].Children {
-				// child.Children[0].Value.(string) = control oid
-				decodeFunc, present := ControlDecodeMap[child.Children[0].Value.(string)]
+				// child.Children[0].ValueString() = control oid
+				decodeFunc, present := ControlDecodeMap[child.Children[0].ValueString()]
 				if present {
 					c, _ := decodeFunc(child)
 					controls = append(controls, c)
 				} else {
 					// not fatal but definately a warning
-					log.Println("Couldn't decode Control : " + child.Children[0].Value.(string))
+					log.Println("Couldn't decode Control : " + child.Children[0].ValueString())
 				}
 			}
 			discreteSearchResult.Controls = controls
@@ -269,7 +269,7 @@ func decodeSearchResponse(packet *ber.Packet) (discreteSearchResult *DiscreteSea
 	case SearchResultReference:
 		discreteSearchResult.SearchResultType = SearchResultReference
 		for ref := range packet.Children[1].Children {
-			discreteSearchResult.Referrals = append(discreteSearchResult.Referrals, packet.Children[1].Children[ref].Value.(string))
+			discreteSearchResult.Referrals = append(discreteSearchResult.Referrals, packet.Children[1].Children[ref].ValueString())
 		}
 		return discreteSearchResult, nil
 	}
