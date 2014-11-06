@@ -80,7 +80,7 @@ func NewControlStringFromPacket(p *ber.Packet) (Control, error) {
 	c := new(ControlString)
 	c.ControlType = controlType
 	c.Criticality = criticality
-	c.ControlValue = value.Value.(string)
+	c.ControlValue = value.ValueString()
 	return c, nil
 }
 
@@ -222,12 +222,12 @@ func ReplaceControl(controls []Control, control Control) (oldControl Control) {
 //	c := new(ControlString)
 //	c.ControlType = controlType
 //	c.Criticality = criticality
-//	c.ControlValue = value.Value.(string)
+//	c.ControlValue = value.ValueString()
 //	return c
 //}
 
 func decodeControlTypeAndCrit(p *ber.Packet) (controlType string, criticality bool, value *ber.Packet) {
-	controlType = p.Children[0].Value.(string)
+	controlType = p.Children[0].ValueString()
 	p.Children[0].Description = "Control Type (" + ControlTypeMap[controlType] + ")"
 	criticality = false
 	if len(p.Children) == 3 {
@@ -580,7 +580,7 @@ func NewControlServerSideSortResponse(p *ber.Packet) (Control, error) {
 
 	if len(value.Children) == 2 {
 		value.Children[1].Description = "Attribute Name"
-		c.AttributeName = value.Children[1].Value.(string)
+		c.AttributeName = value.Children[1].ValueString()
 		value.Children[1].Value = c.AttributeName
 	}
 	return c, nil
@@ -662,7 +662,7 @@ func NewControlVlvResponse(p *ber.Packet) (Control, error) {
 
 	if len(value.Children) == 4 {
 		value.Children[3].Description = "ContextID"
-		c.ContextID = value.Children[3].Value.(string)
+		c.ContextID = value.Children[3].ValueString()
 	}
 
 	return c, nil

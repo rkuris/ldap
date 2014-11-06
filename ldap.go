@@ -241,7 +241,7 @@ func addControlDescriptions(packet *ber.Packet) {
 	packet.Description = "Controls"
 	for _, child := range packet.Children {
 		child.Description = "Control"
-		child.Children[0].Description = "Control Type (" + ControlTypeMap[child.Children[0].Value.(string)] + ")"
+		child.Children[0].Description = "Control Type (" + ControlTypeMap[child.Children[0].ValueString()] + ")"
 		value := child.Children[1]
 		if len(child.Children) == 3 {
 			child.Children[1].Description = "Criticality"
@@ -249,7 +249,7 @@ func addControlDescriptions(packet *ber.Packet) {
 		}
 		value.Description = "Control Value"
 
-		switch child.Children[0].Value.(string) {
+		switch child.Children[0].ValueString() {
 		case ControlTypePaging:
 			value.Description += " (Paging)"
 			if value.Value != nil {
@@ -319,7 +319,7 @@ func getLDAPResultCode(p *ber.Packet) (code uint8, description string) {
 		response := p.Children[1]
 		if response.ClassType == ber.ClassApplication && response.TagType == ber.TypeConstructed && len(response.Children) == 3 {
 			code = uint8(response.Children[0].Value.(uint64))
-			description = response.Children[2].Value.(string)
+			description = response.Children[2].ValueString()
 			return
 		}
 	}
