@@ -22,12 +22,11 @@ import (
 //	NetworkConnectTimeout time.Duration // default 0 no timeout
 //	ReadTimeout    time.Duration // default 0 no timeout
 //	AbandonMessageOnReadTimeout bool // send abandon on a ReadTimeout (not for searches yet)
-//	Network        string // default empty "tcp"
 //	Addr           string // default empty
 //
 // A minimal connection...
-//	ldap := NewLDAPConnection("localhost",389)
-//  err := ldap.Connect() // returns the same conn passed but connected.
+//  ldap := NewLDAPConnection("localhost",389)
+//  err := ldap.Connect() // Connects the existing connection, or returns an error
 type LDAPConnection struct {
 	IsTLS bool
 	IsSSL bool
