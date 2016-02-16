@@ -15,6 +15,34 @@ import (
 	"time"
 )
 
+// An interface for a network dialing method compatible with net.Dial()
+type Dialable interface {
+	Dial(string, string) (net.Conn, error)
+}
+
+// An interface for a network dialing method compatible with net.DialTimeout()
+type TimedDialable interface {
+	DialTimeout(string, string, time.Duration) (net.Conn, error)
+}
+
+// Converts a net.Dial() compatible function to Dialable
+type Dialer func(string, string) (net.Conn, error)
+
+// Converts a net.DialTimeout() compatible function to TimedDialable
+type TimedDialer func(string, string, time.Duration) (net.Conn, error)
+
+func (fn Dialer) Dial(n, a string) (net.Conn, error) {
+	return fn(n, a)
+}
+
+func (fn TimedDialer) Dial(n, a string) (net.Conn, error) {
+	return fn(n, a, 0)
+}
+
+func (fn TimedDialer) DialTimeout(n, a string, t time.Duration) (net.Conn, error) {
+	return fn(n, a, t)
+}
+
 // Conn - LDAP Connection and also pre/post connect configuation
 //	IsTLS bool // default false
 //	IsSSL bool // default false
@@ -23,6 +51,7 @@ import (
 //	ReadTimeout    time.Duration // default 0 no timeout
 //	AbandonMessageOnReadTimeout bool // send abandon on a ReadTimeout (not for searches yet)
 //	Addr           string // default empty
+//	Dialer         Dialable // default nil, optional network dialer to use (net.Dial()/net.DialTimeout() by default)
 //
 // A minimal connection...
 //  ldap := NewLDAPConnection("localhost",389)
@@ -38,6 +67,8 @@ type LDAPConnection struct {
 	AbandonMessageOnReadTimeout bool
 
 	TlsConfig *tls.Config
+
+	Dialer Dialable
 
 	conn               net.Conn
 	chanResults        map[uint64]chan *ber.Packet
@@ -58,10 +89,20 @@ func (l *LDAPConnection) Connect() error {
 	if l.conn == nil {
 		var c net.Conn
 		var err error
-		if l.NetworkConnectTimeout > 0 {
-			c, err = net.DialTimeout("tcp", l.Addr, l.NetworkConnectTimeout)
-		} else {
-			c, err = net.Dial("tcp", l.Addr)
+
+		if l.Dialer == nil {
+			if l.NetworkConnectTimeout > 0 {
+				l.Dialer = TimedDialer(net.DialTimeout)
+			} else {
+				l.Dialer = Dialer(net.Dial)
+			}
+		}
+
+		switch dialer := l.Dialer.(type) {
+		case TimedDialable:
+			c, err = dialer.DialTimeout("tcp", l.Addr, l.NetworkConnectTimeout)
+		case Dialable:
+			c, err = dialer.Dial("tcp", l.Addr)
 		}
 
 		if err != nil {
