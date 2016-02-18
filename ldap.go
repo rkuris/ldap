@@ -310,6 +310,10 @@ func (e *LDAPError) Error() string {
 	return fmt.Sprintf("LDAP Result Code %d %q: %s", e.ResultCode, LDAPResultCodeMap[e.ResultCode], e.sText)
 }
 
+func (e *LDAPError) Status() string {
+	return e.sText
+}
+
 func NewLDAPError(resultCode uint8, sText string) error {
 	return &LDAPError{ResultCode: resultCode, sText: sText}
 }
@@ -317,10 +321,20 @@ func NewLDAPError(resultCode uint8, sText string) error {
 func getLDAPResultCode(p *ber.Packet) (code uint8, description string) {
 	if len(p.Children) >= 2 {
 		response := p.Children[1]
-		if response.ClassType == ber.ClassApplication && response.TagType == ber.TypeConstructed && len(response.Children) == 3 {
-			code = uint8(response.Children[0].Value.(uint64))
-			description = response.Children[2].ValueString()
-			return
+		if response.ClassType == ber.ClassApplication && response.TagType == ber.TypeConstructed {
+			switch {
+			case len(response.Children) == 3:
+				code = uint8(response.Children[0].Value.(uint64))
+				description = response.Children[2].ValueString()
+				return
+			case len(response.Children) == 4 && response.Children[0].Value.(uint64) == uint64(LDAPResultReferral):
+				response = response.Children[3]
+				if response.ClassType == ber.ClassContext && response.TagType == ber.TypeConstructed && len(response.Children) == 1 {
+					code = uint8(LDAPResultReferral)
+					description = response.Children[0].ValueString()
+					return
+				}
+			}
 		}
 	}
 
