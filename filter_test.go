@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/mavricknz/asn1-ber"
+	"github.com/rkuris/asn1-ber"
 	"testing"
 )
 
